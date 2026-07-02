@@ -1,65 +1,171 @@
-import Image from "next/image";
+import GoogleLoginButton from "./components/GoogleLoginButton";
 
-export default function Home() {
+export default function LoginPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main
+      style={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        overflow: "hidden",
+        minHeight: "100dvh",
+      }}
+    >
+      {/* Animated gradient background */}
+      <div
+        className="gradient-bg"
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: 0.15,
+          zIndex: 0,
+        }}
+      />
+
+      {/* Floating orbs for visual depth */}
+      <div
+        style={{
+          position: "absolute",
+          top: "10%",
+          left: "15%",
+          width: "300px",
+          height: "300px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(108,92,231,0.3) 0%, transparent 70%)",
+          filter: "blur(60px)",
+          animation: "float 6s ease-in-out infinite",
+          zIndex: 0,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "15%",
+          right: "10%",
+          width: "250px",
+          height: "250px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(116,185,255,0.3) 0%, transparent 70%)",
+          filter: "blur(60px)",
+          animation: "float 8s ease-in-out 1s infinite",
+          zIndex: 0,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          right: "30%",
+          width: "200px",
+          height: "200px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(162,155,254,0.2) 0%, transparent 70%)",
+          filter: "blur(50px)",
+          animation: "float 7s ease-in-out 2s infinite",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Login Card */}
+      <div
+        className="glass animate-scale-in"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          maxWidth: "440px",
+          margin: "0 20px",
+          padding: "48px 40px",
+          borderRadius: "var(--border-radius-xl)",
+          boxShadow: "var(--shadow-glass)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "32px",
+        }}
+      >
+        {/* Logo / Icon */}
+        <div
+          style={{
+            width: "72px",
+            height: "72px",
+            borderRadius: "var(--border-radius-lg)",
+            background: "var(--accent-gradient)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "var(--shadow-glow)",
+          }}
+        >
+          <svg
+            width="36"
+            height="36"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            <circle cx="9" cy="10" r="1" fill="white" stroke="none" />
+            <circle cx="12" cy="10" r="1" fill="white" stroke="none" />
+            <circle cx="15" cy="10" r="1" fill="white" stroke="none" />
+          </svg>
+        </div>
+
+        {/* Title & Subtitle */}
+        <div style={{ textAlign: "center" }}>
+          <h1
+            style={{
+              fontSize: "28px",
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              marginBottom: "8px",
+              color: "var(--text-primary)",
+            }}
+          >
+            ChatBot IA
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p
+            style={{
+              fontSize: "15px",
+              color: "var(--text-secondary)",
+              lineHeight: 1.5,
+            }}
+          >
+            Seu assistente inteligente para respostas rápidas e conversas produtivas.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Divider */}
+        <div
+          style={{
+            width: "100%",
+            height: "1px",
+            background: "var(--border-color)",
+          }}
+        />
+
+        {/* Google Login Button */}
+        <div style={{ width: "100%" }}>
+          <GoogleLoginButton />
         </div>
-      </main>
-    </div>
+
+        {/* Footer text */}
+        <p
+          style={{
+            fontSize: "12px",
+            color: "var(--text-tertiary)",
+            textAlign: "center",
+            lineHeight: 1.6,
+          }}
+        >
+          Ao entrar, você concorda com nossos Termos de Uso e Política de Privacidade.
+        </p>
+      </div>
+    </main>
   );
 }
