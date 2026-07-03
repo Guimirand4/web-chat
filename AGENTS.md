@@ -14,13 +14,15 @@ Este é o **front-end** de um chatbot com inteligência artificial. O sistema pe
 
 ### Status Atual
 
-- ✅ Tela de Login com Google (simulada — sem OAuth real)
+- ✅ Tela de Login com Google (integrada com backend OAuth)
 - ✅ Tela de Chat com sidebar de histórico e área de mensagens
 - ✅ Sistema de temas (dark/light) com toggle
+- ✅ Autenticação real via Google OAuth (backend redireciona para Google, retorna JWT)
+- ✅ Proteção de rotas (chat só acessível autenticado)
+- ✅ Dados do usuário (nome, email, foto) do Google exibidos na sidebar
 - ✅ Respostas do bot mockadas localmente
-- ⬜ Integração com autenticação real (Google OAuth via NextAuth ou Firebase)
 - ⬜ Integração com API de IA (OpenAI, Gemini, etc.)
-- ⬜ Persistência de dados (banco de dados / backend)
+- ⬜ Persistência de conversas (banco de dados / backend)
 
 ---
 
@@ -40,31 +42,38 @@ Este é o **front-end** de um chatbot com inteligência artificial. O sistema pe
 
 ```
 front-end-chat-bot/
+├── .env.local                   # Variáveis de ambiente (NEXT_PUBLIC_BACKEND_URL)
 ├── app/
 │   ├── globals.css              # Design system completo (variáveis CSS, temas, animações)
-│   ├── layout.tsx               # Root layout (ThemeProvider + ThemeToggle)
-│   ├── page.tsx                 # Página de Login (rota /)
+│   ├── layout.tsx               # Root layout (ThemeProvider + AuthProvider + ThemeToggle)
+│   ├── page.tsx                 # Página de Login (rota /) — redireciona se autenticado
 │   ├── favicon.ico
+│   │
+│   ├── auth/
+│   │   └── callback/
+│   │       └── page.tsx         # Captura JWT da URL após OAuth e salva no localStorage
 │   │
 │   ├── chat/
 │   │   ├── layout.tsx           # Layout do chat (container flex)
-│   │   └── page.tsx             # Página do Chat (rota /chat) — orquestra estado
+│   │   └── page.tsx             # Página do Chat (rota /chat) — rota protegida
 │   │
 │   ├── components/
-│   │   ├── ThemeProvider.tsx     # Context provider para tema dark/light
+│   │   ├── AuthProvider.tsx     # Context provider para autenticação (user, token, logout)
+│   │   ├── ThemeProvider.tsx    # Context provider para tema dark/light
 │   │   ├── ThemeToggle.tsx      # Botão flutuante de troca de tema (canto superior direito)
-│   │   ├── GoogleLoginButton.tsx # Botão de login com Google (simulado)
-│   │   ├── ChatSidebar.tsx      # Sidebar com histórico de conversas
+│   │   ├── GoogleLoginButton.tsx # Botão de login — redireciona para backend OAuth
+│   │   ├── ChatSidebar.tsx      # Sidebar com histórico + dados do usuário + logout
 │   │   ├── ChatArea.tsx         # Área principal do chat (header + mensagens + input)
 │   │   └── ChatMessage.tsx      # Componente individual de mensagem (bolha)
 │   │
 │   └── lib/
+│       ├── auth.ts              # Utilitários de auth (token, fetchUser, authFetch, logout)
 │       └── chatData.ts          # Types, dados mock e respostas simuladas do bot
 │
 ├── public/                      # Assets estáticos
 ├── package.json
 ├── tsconfig.json
-├── next.config.ts
+├── next.config.ts               # Config (imagens Google permitidas)
 ├── postcss.config.mjs
 ├── eslint.config.mjs
 ├── AGENTS.md                    # Esta documentação (regras para agentes IA)
@@ -75,14 +84,54 @@ front-end-chat-bot/
 
 ## Rotas
 
-| Rota    | Arquivo                | Descrição                    |
-|---------|------------------------|------------------------------|
-| `/`     | `app/page.tsx`         | Tela de login com Google     |
-| `/chat` | `app/chat/page.tsx`    | Tela do chatbot              |
+| Rota              | Arquivo                      | Descrição                              |
+|-------------------|------------------------------|----------------------------------------|
+| `/`               | `app/page.tsx`               | Login — redireciona se já autenticado  |
+| `/auth/callback`  | `app/auth/callback/page.tsx` | Captura JWT da URL após OAuth          |
+| `/chat`           | `app/chat/page.tsx`          | Chat — rota protegida (requer auth)    |
+---
+
+## Fluxo de Autenticação (Google OAuth)
+
+```
+1. Usuário clica "Entrar com Google"
+       ↓
+2. Frontend redireciona para: GET {BACKEND_URL}/auth/google/login
+       ↓
+3. Backend redireciona para tela de consentimento do Google
+       ↓
+4. Usuário autoriza → Google redireciona para: GET {BACKEND_URL}/auth/google/callback
+       ↓
+5. Backend cria/busca user, gera JWT, redireciona para:
+   {FRONTEND_URL}/auth/callback?token=eyJhbGci...
+       ↓
+6. Frontend (/auth/callback) captura o token da URL e salva no localStorage
+       ↓
+7. Frontend redireciona para /chat
+       ↓
+8. AuthProvider busca dados do usuário:
+   GET {BACKEND_URL}/auth/me
+   Header: Authorization: Bearer {token}
+```
+
+### Variáveis de Ambiente
+- `NEXT_PUBLIC_BACKEND_URL` — URL base da API backend (`.env.local`)
+  - Produção: `https://api-chat-six-ruby.vercel.app`
+  - Local: `http://localhost:8000`
+
+### Armazenamento do Token
+- Token JWT salvo em `localStorage` com chave `auth_token`
+- `lib/auth.ts` expõe: `getToken()`, `setToken()`, `removeToken()`, `isAuthenticated()`
+- `authFetch()` — wrapper de `fetch` que injeta o header `Authorization: Bearer`
+
+### Proteção de Rotas
+- `/` (login) → redireciona para `/chat` se já autenticado
+- `/chat` → redireciona para `/` se NÃO autenticado
+- Ambas mostram spinner durante a verificação de auth
 
 ---
 
-## Padrões e Convenções
+
 
 ### Componentes
 - **Server Components** são usados por padrão (layouts, pages estáticas)

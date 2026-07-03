@@ -1,6 +1,47 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import GoogleLoginButton from "./components/GoogleLoginButton";
+import { useAuth } from "./components/AuthProvider";
 
 export default function LoginPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace("/chat");
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // Enquanto verifica autenticação, não mostra nada
+  if (isLoading) {
+    return (
+      <main
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100dvh",
+        }}
+      >
+        <div
+          style={{
+            width: "40px",
+            height: "40px",
+            border: "3px solid var(--border-color)",
+            borderTopColor: "var(--accent-primary)",
+            borderRadius: "50%",
+            animation: "spin 0.8s linear infinite",
+          }}
+        />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </main>
+    );
+  }
+
   return (
     <main
       style={{

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Conversation } from "../lib/chatData";
+import type { User } from "../lib/auth";
 
 interface ChatSidebarProps {
   conversations: Conversation[];
@@ -9,6 +10,8 @@ interface ChatSidebarProps {
   onNewChat: () => void;
   isOpen: boolean;
   onToggle: () => void;
+  user: User | null;
+  onLogout: () => void;
 }
 
 function groupByDate(conversations: Conversation[]) {
@@ -49,8 +52,14 @@ export default function ChatSidebar({
   onNewChat,
   isOpen,
   onToggle,
+  user,
+  onLogout,
 }: ChatSidebarProps) {
   const groups = groupByDate(conversations);
+
+  const userInitial = user?.name?.charAt(0)?.toUpperCase() ?? "U";
+  const userName = user?.name ?? "Usuário";
+  const userEmail = user?.email ?? "";
 
   return (
     <>
@@ -288,30 +297,92 @@ export default function ChatSidebar({
             flexShrink: 0,
           }}
         >
-          <div
+          {user?.picture ? (
+            <img
+              src={user.picture}
+              alt={userName}
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "var(--border-radius-full)",
+                objectFit: "cover",
+              }}
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "var(--border-radius-full)",
+                background: "var(--accent-gradient)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "13px",
+                fontWeight: 700,
+                color: "white",
+              }}
+            >
+              {userInitial}
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: "13px",
+                fontWeight: 500,
+                color: "var(--text-primary)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {userName}
+            </div>
+            <div
+              style={{
+                fontSize: "11px",
+                color: "var(--text-tertiary)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {userEmail}
+            </div>
+          </div>
+          {/* Logout button */}
+          <button
+            onClick={onLogout}
+            aria-label="Sair"
+            title="Sair da conta"
             style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "var(--border-radius-full)",
-              background: "var(--accent-gradient)",
+              background: "none",
+              border: "none",
+              color: "var(--text-tertiary)",
+              cursor: "pointer",
+              padding: "6px",
+              borderRadius: "var(--border-radius-sm)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "13px",
-              fontWeight: 700,
-              color: "white",
+              transition: "color var(--transition-fast)",
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "#ef4444";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--text-tertiary)";
             }}
           >
-            U
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-primary)" }}>
-              Usuário
-            </div>
-            <div style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>
-              usuario@email.com
-            </div>
-          </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
         </div>
       </aside>
 

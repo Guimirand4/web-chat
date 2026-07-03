@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../components/AuthProvider";
 import ChatSidebar from "../components/ChatSidebar";
 import ChatArea from "../components/ChatArea";
 import {
   getMockConversations,
-  createMessage,
   type Conversation,
   type Message,
 } from "../lib/chatData";
 
 export default function ChatPage() {
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
+
   const [conversations, setConversations] = useState<Conversation[]>(
     getMockConversations
   );
@@ -19,13 +23,19 @@ export default function ChatPage() {
   >(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Proteger rota: se não autenticado, redireciona para login
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
   const activeConversation = conversations.find(
     (c) => c.id === activeConversationId
   );
 
   const handleSelectConversation = useCallback((id: string) => {
     setActiveConversationId(id);
-    // Close sidebar on mobile
     if (window.innerWidth <= 768) {
       setSidebarOpen(false);
     }
@@ -41,7 +51,6 @@ export default function ChatPage() {
     };
     setConversations((prev) => [newConv, ...prev]);
     setActiveConversationId(newConv.id);
-    // Close sidebar on mobile
     if (window.innerWidth <= 768) {
       setSidebarOpen(false);
     }
@@ -53,9 +62,7 @@ export default function ChatPage() {
         return prev.map((conv) => {
           if (conv.id !== activeConversationId) return conv;
 
-          // If we already have this message (duplicate protection)
           if (conv.messages.find((m) => m.id === userMsg.id)) {
-            // This is the bot reply coming in
             if (botReply) {
               return {
                 ...conv,
@@ -66,7 +73,6 @@ export default function ChatPage() {
             return conv;
           }
 
-          // New user message
           const updatedMessages = [...conv.messages, userMsg];
           const title =
             conv.title === "Nova Conversa"
@@ -84,7 +90,6 @@ export default function ChatPage() {
         });
       });
 
-      // If no active conversation, create one
       if (!activeConversationId) {
         const newConv: Conversation = {
           id: crypto.randomUUID(),
@@ -104,6 +109,33 @@ export default function ChatPage() {
     setSidebarOpen((prev) => !prev);
   }, []);
 
+  // Loading state enquanto verifica autenticação
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100dvh",
+        }}
+      >
+        <div
+          style={{
+            width: "40px",
+            height: "40px",
+            border: "3px solid var(--border-color)",
+            borderTopColor: "var(--accent-primary)",
+            borderRadius: "50%",
+            animation: "spin 0.8s linear infinite",
+          }}
+        />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
     <>
       <ChatSidebar
@@ -113,6 +145,8 @@ export default function ChatPage() {
         onNewChat={handleNewChat}
         isOpen={sidebarOpen}
         onToggle={toggleSidebar}
+        user={user}
+        onLogout={logout}
       />
       <ChatArea
         messages={activeConversation?.messages ?? []}
