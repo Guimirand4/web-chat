@@ -2,14 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { Message } from "../lib/chatData";
-import { createMessage, getBotResponse } from "../lib/chatData";
 import ChatMessage from "./ChatMessage";
 
 interface ChatAreaProps {
   messages: Message[];
-  onSendMessage: (message: Message, botReply: Message) => void;
+  onSendMessage: (content: string) => Promise<void>;
   onToggleSidebar: () => void;
   isSidebarOpen: boolean;
+  activeConversationId: number | null;
 }
 
 export default function ChatArea({
@@ -17,9 +17,10 @@ export default function ChatArea({
   onSendMessage,
   onToggleSidebar,
   isSidebarOpen,
+  activeConversationId,
 }: ChatAreaProps) {
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -29,30 +30,27 @@ export default function ChatArea({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages, isSending]);
 
-  const handleSend = () => {
-    const trimmed = input.trim();
-    if (!trimmed) return;
-
-    const userMsg = createMessage(trimmed, "user");
+  // Limpa o input quando muda de conversa
+  useEffect(() => {
     setInput("");
-    setIsTyping(true);
+    if (inputRef.current) inputRef.current.style.height = "auto";
+  }, [activeConversationId]);
 
-    // Resize textarea back
-    if (inputRef.current) {
-      inputRef.current.style.height = "auto";
+  const handleSend = async () => {
+    const trimmed = input.trim();
+    if (!trimmed || isSending || !activeConversationId) return;
+
+    setInput("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
+
+    setIsSending(true);
+    try {
+      await onSendMessage(trimmed);
+    } finally {
+      setIsSending(false);
     }
-
-    // Simulate bot response delay
-    setTimeout(() => {
-      const botReply = createMessage(getBotResponse(trimmed), "bot");
-      setIsTyping(false);
-      onSendMessage(userMsg, botReply);
-    }, 800 + Math.random() * 1200);
-
-    // Immediately add user message
-    onSendMessage(userMsg, null as unknown as Message);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -64,10 +62,11 @@ export default function ChatArea({
 
   const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-    // Auto-resize
     e.target.style.height = "auto";
     e.target.style.height = Math.min(e.target.scrollHeight, 150) + "px";
   };
+
+  const canSend = !!input.trim() && !isSending && !!activeConversationId;
 
   return (
     <div
@@ -153,7 +152,7 @@ export default function ChatArea({
                 display: "inline-block",
               }}
             />
-            Online
+            Gemini Online
           </div>
         </div>
       </header>
@@ -169,7 +168,8 @@ export default function ChatArea({
           gap: "20px",
         }}
       >
-        {messages.length === 0 && (
+        {/* Empty state */}
+        {messages.length === 0 && !isSending && (
           <div
             className="animate-fade-in"
             style={{
@@ -183,42 +183,58 @@ export default function ChatArea({
               padding: "40px 20px",
             }}
           >
-            <div
-              style={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "var(--border-radius-lg)",
-                background: "var(--accent-gradient)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "var(--shadow-glow)",
-                animation: "float 4s ease-in-out infinite",
-              }}
-            >
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-            </div>
-            <h2
-              style={{
-                fontSize: "20px",
-                fontWeight: 600,
-                color: "var(--text-primary)",
-              }}
-            >
-              Como posso te ajudar?
-            </h2>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "var(--text-secondary)",
-                maxWidth: "400px",
-                lineHeight: 1.6,
-              }}
-            >
-              Digite sua mensagem abaixo para começar uma conversa. Estou pronto para responder suas perguntas!
-            </p>
+            {activeConversationId ? (
+              <>
+                <div
+                  style={{
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "var(--border-radius-lg)",
+                    background: "var(--accent-gradient)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "var(--shadow-glow)",
+                    animation: "float 4s ease-in-out infinite",
+                  }}
+                >
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <h2 style={{ fontSize: "20px", fontWeight: 600, color: "var(--text-primary)" }}>
+                  Como posso te ajudar?
+                </h2>
+                <p style={{ fontSize: "14px", color: "var(--text-secondary)", maxWidth: "400px", lineHeight: 1.6 }}>
+                  Digite sua mensagem abaixo. Estou pronto para responder suas perguntas!
+                </p>
+              </>
+            ) : (
+              <>
+                <div
+                  style={{
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "var(--border-radius-lg)",
+                    background: "var(--bg-tertiary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: 0.4,
+                  }}
+                >
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <h2 style={{ fontSize: "18px", fontWeight: 600, color: "var(--text-secondary)" }}>
+                  Selecione ou crie uma conversa
+                </h2>
+                <p style={{ fontSize: "14px", color: "var(--text-tertiary)", maxWidth: "360px", lineHeight: 1.6 }}>
+                  Use a barra lateral para acessar seu histórico ou iniciar uma nova conversa.
+                </p>
+              </>
+            )}
           </div>
         )}
 
@@ -227,7 +243,7 @@ export default function ChatArea({
         ))}
 
         {/* Typing indicator */}
-        {isTyping && (
+        {isSending && (
           <div
             className="animate-fade-in"
             style={{
@@ -297,8 +313,10 @@ export default function ChatArea({
             borderRadius: "var(--border-radius-lg)",
             padding: "8px 8px 8px 16px",
             transition: "border-color var(--transition-fast), box-shadow var(--transition-fast)",
+            opacity: !activeConversationId ? 0.5 : 1,
           }}
           onFocusCapture={(e) => {
+            if (!activeConversationId) return;
             const container = e.currentTarget;
             container.style.borderColor = "var(--accent-primary)";
             container.style.boxShadow = "0 0 0 3px rgba(108, 92, 231, 0.1)";
@@ -317,8 +335,13 @@ export default function ChatArea({
             value={input}
             onChange={handleTextareaInput}
             onKeyDown={handleKeyDown}
-            placeholder="Digite sua mensagem..."
+            placeholder={
+              !activeConversationId
+                ? "Selecione uma conversa para começar..."
+                : "Digite sua mensagem..."
+            }
             rows={1}
+            disabled={!activeConversationId || isSending}
             style={{
               flex: 1,
               background: "transparent",
@@ -331,21 +354,22 @@ export default function ChatArea({
               resize: "none",
               maxHeight: "150px",
               padding: "6px 0",
+              cursor: !activeConversationId ? "not-allowed" : "text",
             }}
           />
           <button
             id="send-message-btn"
             onClick={handleSend}
-            disabled={!input.trim()}
+            disabled={!canSend}
             aria-label="Enviar mensagem"
             style={{
               width: "40px",
               height: "40px",
               borderRadius: "var(--border-radius-sm)",
               border: "none",
-              background: input.trim() ? "var(--accent-primary)" : "var(--bg-tertiary)",
-              color: input.trim() ? "white" : "var(--text-tertiary)",
-              cursor: input.trim() ? "pointer" : "not-allowed",
+              background: canSend ? "var(--accent-primary)" : "var(--bg-tertiary)",
+              color: canSend ? "white" : "var(--text-tertiary)",
+              cursor: canSend ? "pointer" : "not-allowed",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -353,23 +377,31 @@ export default function ChatArea({
               flexShrink: 0,
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+            {isSending ? (
+              <div
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  border: "2px solid rgba(255,255,255,0.3)",
+                  borderTopColor: "white",
+                  borderRadius: "50%",
+                  animation: "spin 0.7s linear infinite",
+                }}
+              />
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            )}
           </button>
         </div>
-        <p
-          style={{
-            textAlign: "center",
-            fontSize: "11px",
-            color: "var(--text-tertiary)",
-            marginTop: "8px",
-          }}
-        >
+        <p style={{ textAlign: "center", fontSize: "11px", color: "var(--text-tertiary)", marginTop: "8px" }}>
           ChatBot IA pode cometer erros. Verifique informações importantes.
         </p>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
