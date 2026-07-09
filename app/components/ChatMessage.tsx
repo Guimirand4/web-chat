@@ -22,66 +22,85 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
         display: "flex",
         flexDirection: "column",
         alignItems: isUser ? "flex-end" : "flex-start",
-        gap: "6px",
-        animationDelay: `${index * 50}ms`,
+        gap: "4px",
+        animationDelay: `${index * 40}ms`,
         animationFillMode: "both",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          gap: "10px",
-          flexDirection: isUser ? "row-reverse" : "row",
-          maxWidth: "75%",
-        }}
-      >
-        {/* Avatar */}
+      {/* Sender label — apenas para o bot */}
+      {!isUser && (
         <div
           style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "var(--border-radius-full)",
-            flexShrink: 0,
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            fontSize: "14px",
-            fontWeight: 600,
-            background: isUser ? "var(--accent-gradient)" : "var(--bg-tertiary)",
-            color: isUser ? "white" : "var(--text-secondary)",
-            border: isUser ? "none" : "1px solid var(--border-color)",
+            gap: "6px",
+            paddingLeft: "4px",
           }}
         >
-          {isUser ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
+          {/* Ícone do bot */}
+          <div
+            style={{
+              width: "18px",
+              height: "18px",
+              borderRadius: "4px",
+              background: "var(--accent-gradient)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 8V4H8" />
-              <rect x="2" y="2" width="20" height="20" rx="5" />
-              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-              <line x1="9" y1="9" x2="9.01" y2="9" />
-              <line x1="15" y1="9" x2="15.01" y2="9" />
-            </svg>
-          )}
+          </div>
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "var(--text-tertiary)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            ChatBot IA
+          </span>
         </div>
+      )}
 
-        {/* Message Bubble */}
+      {/* Message Bubble */}
+      <div
+        className="chat-bubble-wrapper"
+        style={{
+          maxWidth: "min(68%, 680px)",
+          position: "relative",
+        }}
+      >
         <div
           style={{
-            padding: "12px 16px",
+            padding: isUser ? "10px 16px" : "14px 18px",
             borderRadius: isUser
-              ? "var(--border-radius-lg) var(--border-radius-lg) 4px var(--border-radius-lg)"
-              : "var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-lg) 4px",
+              ? "18px 18px 4px 18px"
+              : "4px 18px 18px 18px",
             background: isUser ? "var(--bg-chat-user)" : "var(--bg-chat-bot)",
             color: isUser ? "var(--text-chat-user)" : "var(--text-chat-bot)",
             fontSize: "14.5px",
-            lineHeight: 1.6,
+            lineHeight: 1.65,
             wordBreak: "break-word",
-            boxShadow: "var(--shadow-sm)",
+            whiteSpace: "pre-wrap",
+            boxShadow: isUser
+              ? "0 2px 8px rgba(108, 92, 231, 0.2)"
+              : "var(--shadow-sm)",
+            border: isUser ? "none" : "1px solid var(--border-color)",
           }}
         >
           {message.content}
@@ -93,8 +112,9 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
         style={{
           fontSize: "11px",
           color: "var(--text-tertiary)",
-          paddingLeft: isUser ? "0" : "42px",
-          paddingRight: isUser ? "42px" : "0",
+          paddingLeft: isUser ? "0" : "4px",
+          paddingRight: "4px",
+          opacity: 0.7,
         }}
       >
         {timeStr}
