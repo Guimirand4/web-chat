@@ -79,6 +79,7 @@ export default function LoginPage() {
           animation: "float 6s ease-in-out infinite",
           zIndex: 0,
         }}
+        className="login-orb"
       />
       <div
         style={{
@@ -93,6 +94,7 @@ export default function LoginPage() {
           animation: "float 8s ease-in-out 1s infinite",
           zIndex: 0,
         }}
+        className="login-orb"
       />
       <div
         style={{
@@ -107,11 +109,12 @@ export default function LoginPage() {
           animation: "float 7s ease-in-out 2s infinite",
           zIndex: 0,
         }}
+        className="login-orb"
       />
 
       {/* Login Card */}
       <div
-        className="glass animate-scale-in"
+        className="glass animate-scale-in login-card"
         style={{
           position: "relative",
           zIndex: 1,

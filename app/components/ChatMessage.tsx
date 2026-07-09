@@ -82,6 +82,7 @@ export default function ChatMessage({ message, index }: ChatMessageProps) {
         className="chat-bubble-wrapper"
         style={{
           maxWidth: "min(68%, 680px)",
+          width: "100%",
           position: "relative",
         }}
       >
